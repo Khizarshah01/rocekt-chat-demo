@@ -55,7 +55,7 @@ export class Mention implements ISlashCommand {
           true
         );
 
-        await this.sendMessage(context, modify, 'github username mention on');
+        await this.sendMessage(context, modify, 'username mention on');
         break;
       }
 
@@ -73,7 +73,7 @@ export class Mention implements ISlashCommand {
           true
         );
 
-        await this.sendMessage(context, modify, 'github username mention off');
+        await this.sendMessage(context, modify, 'username mention off');
         break;
       }
       default:

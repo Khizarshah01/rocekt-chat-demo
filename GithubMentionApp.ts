@@ -2,12 +2,12 @@ import {
     IConfigurationExtend,
     IEnvironmentRead,
     IAppAccessors,
-    ILogger
+    ILogger, IRead, IHttp, IModify, IPersistence
 } from '@rocket.chat/apps-engine/definition/accessors';
 import { App } from '@rocket.chat/apps-engine/definition/App';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 import { Mention } from './slashCommands/mention';
-import { IPostMessageSent } from '@rocket.chat/apps-engine/definition/messages';
+import { IPostMessageSent, IMessage } from '@rocket.chat/apps-engine/definition/messages';
 import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
@@ -26,19 +26,14 @@ export class GithubMentionApp extends App implements IPostMessageSent {
         await configuration.slashCommands.provideSlashCommand(new Mention());
     }
 
-    public async executePostMessageSent(message, read, http, persistence, modify) {
-        const mentions = message.msg;
-
-        if (!mentions || mentions.length === 0) {
-            return;
+    public async checkPostMessageSent(message: IMessage, read: IRead, http: IHttp): Promise<boolean> {
+        if (!message.text) {
+            return false;
         }
+        return message.text.includes('@khizarshah01');
+    }
 
-        const mentionedUser = mentions.match(/@khizarshah01/);
-
-        if (!mentionedUser) {
-            return;
-        }
-
+    public async executePostMessageSent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence, modify: IModify) {
         const association = new RocketChatAssociationRecord(
             RocketChatAssociationModel.USER,
             message.sender.id
@@ -46,20 +41,16 @@ export class GithubMentionApp extends App implements IPostMessageSent {
 
         const records = await read.getPersistenceReader().readByAssociation(association);
 
-        if (!records.length || !records[0].enabled) {
+        if (!records.length || !(records[0] as any).enabled) {
             return;
         }
-
-        const fullMessage = message.text;
-
-        this.appLogger.debug(`message: ${fullMessage}`);
 
         const notifier = read.getNotifier();
         const builder = notifier.getMessageBuilder();
 
         builder
             .setRoom(message.room)
-            .setText(`Thank you for mentioning me, ${message.sender.username}`);
+            .setText(`Thank you for mentioning me, @${message.sender.username}`);
 
         await notifier.notifyUser(message.sender, builder.getMessage());
     }
