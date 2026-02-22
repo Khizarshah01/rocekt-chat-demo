@@ -9,6 +9,6 @@ export const settings: Array<ISetting> = [
         required: false,
         public: false,
         i18nLabel: 'External Logger',
-        i18nDescription: 'URL to send logs',
+        i18nDescription: 'URL to send userid and message on mention',
     },
 ];

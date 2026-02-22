@@ -54,7 +54,7 @@ export class Mention implements ISlashCommand {
           true
         );
 
-        await this.sendMessage(context, modify, 'username mention on');
+        await this.sendMessage(context, modify, 'khizarshah01 mention is on');
         break;
       }
 
@@ -72,7 +72,7 @@ export class Mention implements ISlashCommand {
           true
         );
 
-        await this.sendMessage(context, modify, 'username mention off');
+        await this.sendMessage(context, modify, 'khizarshah01 mention is off');
         break;
       }
       default:

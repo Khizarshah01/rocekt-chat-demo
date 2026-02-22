@@ -1,17 +1,17 @@
 {
     "id": "f4a1637a-012c-4c7a-ab11-5455fe65bc93",
-    "version": "0.0.2",
+    "version": "0.0.1",
     "requiredApiVersion": "^1.44.0",
     "iconFile": "icon.png",
     "author": {
         "name": "khizar shah",
-        "homepage": "https://github.com/Khizarshah01",
-        "support": "https://github.com/Khizarshah01"
+        "homepage": "https://rocketchat.com",
+        "support": "https://support.rocketchat.com"
     },
-    "name": "githubMention",
-    "nameSlug": "githubmention",
+    "name": "khizarshah01",
+    "nameSlug": "khizarshah",
     "classFile": "GithubMentionApp.ts",
-    "description": "reply if someone mention the github username",
+    "description": "a bot that respond when someone mention the github username",
     "implements": [
         "IPostMessageSent"
     ]
