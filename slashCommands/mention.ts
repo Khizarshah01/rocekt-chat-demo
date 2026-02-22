@@ -20,16 +20,15 @@ export class Mention implements ISlashCommand {
   public providesPreview = false;
 
   private async sendMessage(context: SlashCommandContext, modify: IModify, message: string): Promise<void> {
-    const messageStructure = modify.getCreator().startMessage();
     const sender = context.getSender();
     const room = context.getRoom();
+    const builder = modify.getCreator().startMessage();
 
-    messageStructure
-      .setSender(sender)
+    builder
       .setRoom(room)
       .setText(message);
 
-    await modify.getCreator().finish(messageStructure);
+    await modify.getNotifier().notifyUser(sender, builder.getMessage());
   }
 
   public async executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp, persistence: IPersistence): Promise<void> {
@@ -45,8 +44,8 @@ export class Mention implements ISlashCommand {
         const user = context.getSender();
 
         const association = new RocketChatAssociationRecord(
-          RocketChatAssociationModel.USER,
-          user.id
+          RocketChatAssociationModel.MISC,
+          'githubmention'
         );
 
         await persistence.updateByAssociation(
@@ -63,8 +62,8 @@ export class Mention implements ISlashCommand {
         const user = context.getSender();
 
         const association = new RocketChatAssociationRecord(
-          RocketChatAssociationModel.USER,
-          user.id
+          RocketChatAssociationModel.MISC,
+          'githubmention'
         );
 
         await persistence.updateByAssociation(

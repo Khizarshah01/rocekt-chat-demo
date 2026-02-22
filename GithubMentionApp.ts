@@ -12,6 +12,7 @@ import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
 } from '@rocket.chat/apps-engine/definition/metadata';
+import { settings } from './settings';
 
 export class GithubMentionApp extends App implements IPostMessageSent {
     private readonly appLogger: ILogger
@@ -24,6 +25,11 @@ export class GithubMentionApp extends App implements IPostMessageSent {
 
     protected async extendConfiguration(configuration: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
         await configuration.slashCommands.provideSlashCommand(new Mention());
+        await Promise.all(
+            settings.map((setting) =>
+                configuration.settings.provideSetting(setting)
+            )
+        );
     }
 
     public async checkPostMessageSent(message: IMessage, read: IRead, http: IHttp): Promise<boolean> {
@@ -35,8 +41,8 @@ export class GithubMentionApp extends App implements IPostMessageSent {
 
     public async executePostMessageSent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence, modify: IModify) {
         const association = new RocketChatAssociationRecord(
-            RocketChatAssociationModel.USER,
-            message.sender.id
+            RocketChatAssociationModel.MISC,
+            'githubmention'
         );
 
         const records = await read.getPersistenceReader().readByAssociation(association);
@@ -45,13 +51,45 @@ export class GithubMentionApp extends App implements IPostMessageSent {
             return;
         }
 
+        const externalLoggerUrl = await read
+            .getEnvironmentReader()
+            .getSettings()
+            .getValueById('external_log_url');
+
         const notifier = read.getNotifier();
         const builder = notifier.getMessageBuilder();
 
-        builder
-            .setRoom(message.room)
-            .setText(`Thank you for mentioning me, @${message.sender.username}`);
-
-        await notifier.notifyUser(message.sender, builder.getMessage());
+        if (!externalLoggerUrl || externalLoggerUrl.trim() === '') {
+            builder
+                .setRoom(message.room)
+                .setText(
+                    `Thank you for mentioning me, @${message.sender.username}`
+                );
+            await notifier.notifyUser(message.sender, builder.getMessage());
+            return;
+        } else {
+            try {
+                const response = await http.post(externalLoggerUrl, {
+                    headers: { 'Content-Type': 'application/json' },
+                    data: {
+                        userid: message.sender.id,
+                        message: message.text,
+                    },
+                });
+                const result = response.data?.result;
+                const id = response.data?.id;
+                builder
+                    .setRoom(message.room)
+                    .setText(
+                        `${result} [${id}]`
+                    );
+                await notifier.notifyUser(message.sender, builder.getMessage());
+            } catch (error) {
+                builder
+                    .setRoom(message.room)
+                    .setText(`error: ${error}`);
+                await notifier.notifyUser(message.sender, builder.getMessage());
+            }
+        }
     }
 }
